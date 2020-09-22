@@ -1,0 +1,4 @@
+- react-native-gesture-handler - expected version range: ~1.3.0 - actual version installed: ~1.6.0
+ - react-native-reanimated - expected version range: ~1.2.0 - actual version installed: ~1.9.0
+ - react-native-screens - expected version range: ~1.0.0-alpha.23 - actual version installed: ~2.9.0
+ - react-native-safe-area-context - expected version range: ~0.3.6 - actual version installed: ~3.0.7
