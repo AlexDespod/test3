@@ -29,9 +29,9 @@ export const unchecked = (mass) =>({
     payload:mass
 })
 
-export const setUser = (mass) =>({
+export const setUser = (name) =>({
     type:SET_USER,
-    payload:mass
+    payload:name
 })
 
 export const newError = (err) =>({

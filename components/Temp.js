@@ -1,7 +1,7 @@
 
 import React,{ Component ,useEffect} from 'react';
 import { Text, View,Button,Alert ,Linking,Image} from 'react-native';
-import {styles} from './style';
+import {styles} from '../style/style';
 export default class Temp extends Component{
     constructor(props){
         super(props);

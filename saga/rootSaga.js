@@ -1,17 +1,30 @@
-import { takeEvery,all, takeLatest, call, fork } from "redux-saga/effects";
+import AsyncStorage from "@react-native-community/async-storage";
+import {
+  takeEvery,
+  all,
+  put,
+  takeLatest,
+  call,
+  fork,
+} from "redux-saga/effects";
 import { srcws } from "../serversource";
 
-import { SET_SOCKET ,CREATE_SOCKET,GET_MESSAGE_CHECKED , SEND} from "../store/actions/actions";
-import { checkedMessage, connectSocket, handlSocket , hendlSendedMessage } from "./sagas";
+import { GET_MESSAGE_CHECKED, SEND } from "../store/actions/actions";
+import {
+  checkedMessage,
+  connectSocket,
+  handlSocket,
+  hendlSendedMessage,
+} from "./sagas";
 
-export function* rootSaga() {
+export function* rootSaga(store) {
+  let channel = yield call(
+    connectSocket,
+    { link: srcws + ":8000/fetchserver/socket.php" },
+    store
+  );
 
-    let socket = Object.assign({});
-
-    let channel = yield call(connectSocket,socket,srcws + ':8000/fetchserver/socket,php');
-
-    yield takeEvery(channel,handlSocket,socket)
-    yield takeEvery(GET_MESSAGE_CHECKED,checkedMessage) 
-    yield takeLatest(SEND,hendlSendedMessage);
-    
-  }
+  yield takeEvery(channel, handlSocket);
+  yield takeEvery(GET_MESSAGE_CHECKED, checkedMessage);
+  yield takeLatest(SEND, hendlSendedMessage);
+}

@@ -10,7 +10,7 @@ import { composeWithDevTools } from 'redux-devtools-extension';
     const sagaMiddl = createSagaMiddleware();
    
 
-    const store = createStore(websocketReducer,composeWithDevTools(applyMiddleware(sagaMiddl)));
+   export const store = createStore(websocketReducer,composeWithDevTools(applyMiddleware(sagaMiddl)));
 
     sagaMiddl.run(rootSaga,{store});
 

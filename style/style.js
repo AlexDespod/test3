@@ -82,7 +82,7 @@ export const styles=StyleSheet.create({
     },
     chatScrollView:{
         flex:1,
-    
+        transform:[{scale:-1}]
     },
     chatvievinput:{
         flexDirection:"row",
@@ -93,7 +93,7 @@ export const styles=StyleSheet.create({
         borderWidth:2
     },
     chatInput:{
-        width:200,
+        width:300,
         padding:5,
         borderStyle:"solid",
         borderTopColor:"black",
@@ -117,15 +117,19 @@ export const styles=StyleSheet.create({
         padding:10
     },
     alignLeft:{
+        margin:10,
         padding:10,
         backgroundColor:"pink",
         display:"flex",
-        alignSelf:"flex-start"
+        alignSelf:"flex-start",
+        borderRadius:10
     },
     alignRight:{
+        margin:10,
         padding:10,
         backgroundColor:"pink",
-        alignSelf:"flex-end"
+        alignSelf:"flex-end",
+        borderRadius:10
     }
 });
    
