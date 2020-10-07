@@ -8,6 +8,8 @@ import {
   GET_ERROR,
   CLEAN_MESSAGES,
   SET_SOCKET,
+  SET_CURRENT_INTERLOCUTOR,
+  SET_CURRENT_CHATKEY,
 } from "../actions/actions";
 
 export const websocketReducer = (state = initialState, action) => {
@@ -19,8 +21,6 @@ export const websocketReducer = (state = initialState, action) => {
     case CHANGE_TEXT:
       return Object.assign({}, state, { text: action.payload });
     case GET_MESSAGE:
-      // console.log(action.payload.message)
-      // let tmp = state.message.concat([action.payload]);
       let tmp = state.message.concat([]);
       tmp.unshift(action.payload);
       console.log(tmp);
@@ -40,13 +40,11 @@ export const websocketReducer = (state = initialState, action) => {
         return el.user == action.payload;
       });
       newMessage.splice(num, 1);
-      // state.message.forEach(el=>{
-      //     if(el.user = action.payload){
-      //         let tmp = newMessage.indexOf(el);
-      //         newMessage.splice(tmp,1);
-      //     }
-      // });
       return Object.assign({}, state, { message: newMessage });
+    case SET_CURRENT_INTERLOCUTOR:
+      return Object.assign({}, state, { currentInterlocutor: action.payload });
+    case SET_CURRENT_CHATKEY:
+      return Object.assign({}, state, { currentChatkey: action.payload });
     default:
       return state;
   }

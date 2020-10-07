@@ -2,6 +2,10 @@ import React, { Component, useEffect, useState } from "react";
 import { connect, useDispatch } from "react-redux";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
+import AsyncStorage from "@react-native-community/async-storage";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Text } from "react-native";
+
 // import Home from "./Home";
 // import Temp from "./Temp";
 import Registration from "./Registration";
@@ -12,13 +16,31 @@ import ChatList from "./ChatList";
 import setProfile from "./setProfile";
 import PageOfOtherUsers from "./pageOfOtherUsers";
 import { setUser } from "../store/actionCreators/actionCreators";
-import AsyncStorage from "@react-native-community/async-storage";
-import { Text } from "react-native";
+
+const ChatStack = createStackNavigator();
+const Tabs = createBottomTabNavigator();
+
+const TabNavigator = () => (
+  <Tabs.Navigator initialRouteName="UserPage">
+    <Tabs.Screen name="UserPage" component={UserPage} />
+    <Tabs.Screen name="ChatsList" component={ChatList} />
+    <Tabs.Screen name="PageOfOtherUsers" component={PageOfOtherUsers} />
+  </Tabs.Navigator>
+);
+
+// const ChatNavigation = () => (
+//   <ChatStack.Navigator>
+//     <ChatStack.Screen name="MyChats" component={MyChats} options={} />
+//   </ChatStack.Navigator>
+// );
 
 const Routes = (props) => {
   const Stack = createStackNavigator();
+
   const [username, setUserName] = useState(null);
+
   const dispatch = useDispatch();
+
   const StoreGetName = async () => {
     const res = await AsyncStorage.getItem("name");
     console.log("name is ", res);
@@ -37,18 +59,13 @@ const Routes = (props) => {
       {username !== null ? (
         <NavigationContainer>
           <Stack.Navigator
-            initialRouteName={username !== "" ? "UserPage" : "Login"}
+            initialRouteName={username !== "" ? "Home" : "Login"}
           >
             <Stack.Screen name="Registration" component={Registration} />
-            <Stack.Screen
-              name="PageOfOtherUsers"
-              component={PageOfOtherUsers}
-            />
-            <Stack.Screen name="setProfile" component={setProfile} />
             <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="UserPage" component={UserPage} />
+            <Stack.Screen name="setProfile" component={setProfile} />
+            <Stack.Screen name="Home" component={TabNavigator} />
             <Stack.Screen name="MyChats" component={MyChats} />
-            <Stack.Screen name="ChatsList" component={ChatList} />
             {/* <Stack.Screen name="Home" component={Home} />
         <Stack.Screen name="Temp" component={Temp} /> */}
           </Stack.Navigator>

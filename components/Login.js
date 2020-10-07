@@ -8,22 +8,13 @@ import AsyncStorage from "@react-native-community/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useDispatch } from "react-redux";
 import { setUser } from "../store/actionCreators/actionCreators";
+
 const Login = () => {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [text, setText] = useState("");
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  // useEffect(() => {
-  //   StoreGetName = async () => {
-  //     const res = await AsyncStorage.getItem("name");
-  //     if (res !== "") {
-  //       console.log(res);
-  //       navigation.navigate("UserPage", { username: res });
-  //     } else return;
-  //   };
-  //   StoreGetName();
-  // }, []);
   const loginUser = () => {
     fetch(src + "/fetchserver/login.php", {
       method: "POST",
@@ -49,9 +40,7 @@ const Login = () => {
           };
           dispatch(setUser(responseJson[1].username));
           StoreSetName(responseJson[1].username);
-          navigation.navigate("UserPage", {
-            username: responseJson[1].username,
-          });
+          navigation.reset({ index: 0, routes: [{ name: "Home" }] });
         } else if (responseJson[0] == "false") setText("uccorrect data");
       });
   };
@@ -75,8 +64,6 @@ const Login = () => {
           navigation.navigate("Registration");
         }}
       >
-        <Text>{name}</Text>
-        <Text>{password}</Text>
         <Text>have not accont?</Text>
       </TouchableOpacity>
     </View>

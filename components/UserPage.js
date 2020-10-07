@@ -53,6 +53,7 @@ class UserPage extends Component {
     if (user !== "") {
       console.log("name is ", user);
     }
+    console.log(this.props);
   }
   componentDidUpdate(prevProps) {
     console.log(prevProps);
@@ -70,15 +71,8 @@ class UserPage extends Component {
   }
 
   render() {
-    // const { text, message, changetext, connection, user } = this.props;
-
     return (
       <View style={styles.containerUser}>
-        {/* <Text>User id : {JSON.stringify(message)}</Text>
-        <Text>
-          connection : {connection === true && <Text>connected</Text>}
-        </Text> */}
-
         {this.state.profileSettings !== null ? (
           <Image
             source={{
@@ -102,15 +96,8 @@ class UserPage extends Component {
           onPress={() => {
             this.props.navigation.navigate("ChatsList", {
               mass: this.state.userchats,
-              username: this.state.userName,
               interlocutor: this.state.interlocutor,
             });
-          }}
-        />
-        <Button
-          title="other users"
-          onPress={() => {
-            this.props.navigation.navigate("PageOfOtherUsers");
           }}
         />
         <Button
@@ -118,7 +105,10 @@ class UserPage extends Component {
           onPress={() => {
             AsyncStorage.setItem("name", "");
             this.props.setName("");
-            this.props.navigation.navigate("Login");
+            this.props.navigation.reset({
+              index: 0,
+              routes: [{ name: "Login" }],
+            });
           }}
         />
       </View>

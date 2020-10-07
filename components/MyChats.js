@@ -1,4 +1,10 @@
-import React, { Component, createRef } from "react";
+import React, {
+  Component,
+  createRef,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   TouchableOpacity,
   Dimensions,
@@ -10,173 +16,137 @@ import {
 import { styles } from "../style/style";
 import { TextInput } from "react-native-gesture-handler";
 import { src } from "../serversource";
-import { connect } from "react-redux";
+import { connect, useDispatch, useSelector } from "react-redux";
 import {
-  changeText,
-  connectToSocket,
   sendMessage,
   cleanMessages,
   checkMessages,
 } from "../store/actionCreators/actionCreators";
+import { Button } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 
-class MyChats extends Component {
-  constructor(props) {
-    super(props);
-    this._flatList = createRef();
-    this.state = {
-      massOfMessages: [],
+const MyChats = (props) => {
+  const user = useSelector((store) => store.user);
+  const chatkey = useSelector((store) => store.currentChatkey);
+  const interlocutor = useSelector((store) => store.currentInterlocutor);
+  const message = useSelector((store) => store.message);
+  const dispatch = useDispatch();
+  const navigation = useNavigation();
+  const [massOfMessages, setmassOfMessages] = useState([]);
+  const keyboardVerticalOffset = Platform.OS === "ios" ? 65 : 0;
+  const input = useRef();
+  console.log(input);
+  let i = 0;
+  let text = "";
 
-      name: this.props.route.params.userName,
-      text1: "",
-      message: "",
-      chatkey: this.props.route.params.chatkey,
-      interlocutor: this.props.route.params.interlocutor,
-      dimensions: undefined,
-    };
-  }
-  i = 0;
-  text = "";
-
-  updateToCheck = {
+  const updateToCheck = {
     type: "UPDATETOCHECK",
-    chat_user: this.props.route.params.userName,
-    chat_id: this.props.route.params.chatkey,
+    chat_user: user,
+    chat_id: chatkey,
   };
-  componentDidUpdate() {
-    const { interlocutor, name } = this.state;
-    const { message, cleanMessages, checkMessages } = this.props;
-    if (message.length != 0) {
-      message.forEach((element) => {
-        if (element.sender === interlocutor) {
-          let mass = this.state.massOfMessages;
-          mass.unshift({ message: element.message, sender: element.sender });
-          this.setState({ massOfMessages: mass });
-
-          cleanMessages(element.sender);
-          checkMessages(this.updateToCheck);
-        } else if (element.sender === name) {
-          let mass = this.state.massOfMessages;
-          mass.unshift({ message: element.message, sender: element.sender });
-          this.setState({ massOfMessages: mass });
-
-          cleanMessages(element.sender);
-          checkMessages(this.updateToCheck);
-        }
-      });
-    }
-  }
-
-  componentDidMount() {
-    this.getMessages();
-    this.props.checkMessages(this.updateToCheck);
-    console.log(this.state.massOfMessages.length);
-  }
-
-  render() {
-    const keyboardVerticalOffset = Platform.OS === "ios" ? 65 : 0;
-    const { text, message } = this.props;
-    return (
-      <View style={styles.containerUser}>
-        <View style={styles.chatIntercoluter}>
-          <Text>{this.state.interlocutor}</Text>
-          <Text>{JSON.stringify(message)}</Text>
-        </View>
-
-        <FlatList
-          ref={this._flatList}
-          style={styles.chatScrollView}
-          data={this.state.massOfMessages}
-          onLayout={this.onLayout}
-          renderItem={({ item }) => {
-            return (
-              <View style={{ width: 360, transform: [{ scale: -1 }] }}>
-                <Text style={this.choseAlign(item.sender)}>
-                  {item.sender + " : " + item.message}
-                </Text>
-              </View>
-            );
-          }}
-          keyExtractor={() => {
-            this.i++;
-            let num = this.i.toString();
-            return num;
-          }}
-        />
-
-        {/* <Text>{this.state.chatkey}</Text> */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS == "ios" ? "padding" : "height"}
-          //   style={styles.container}
-          keyboardVerticalOffset={keyboardVerticalOffset}
-        >
-          <View style={styles.chatvievinput}>
-            <TextInput
-              placeholder="write message"
-              style={styles.chatInput}
-              ref="input"
-              onChangeText={(data) => {
-                this.text = data;
-              }}
-            />
-            <TouchableOpacity
-              style={styles.sendmess}
-              onPress={() => {
-                let mess = {
-                  chat_message: this.text,
-                  chat_user: this.state.name,
-                  interlocutor: this.state.interlocutor,
-                  chat_id: this.state.chatkey,
-                  type: "NEWMESSAGETOUSER",
-                };
-                this.props.sendMessage(mess);
-                this.refs.input.clear();
-              }}
-            >
-              <Text>send</Text>
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
-    );
-  }
-
-  choseAlign = (first) => {
-    if (first == this.state.interlocutor) {
+  const getMessages = async () => {
+    const query = await fetch(src + "/fetchserver/chat.php", {
+      method: "POST",
+      body: JSON.stringify({
+        query: "GETMESSAGES",
+        chatid: chatkey,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const responseJson = await query.json();
+    console.log(responseJson);
+    setmassOfMessages(responseJson.reverse());
+  };
+  const choseAlign = (first) => {
+    if (first == interlocutor) {
       return styles.alignLeft;
     } else {
       return styles.alignRight;
     }
   };
-
-  getMessages = () => {
-    const query = fetch(src + "/fetchserver/chat.php", {
-      method: "POST",
-      body: JSON.stringify({
-        query: "GETMESSAGES",
-        chatid: this.state.chatkey,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => response.json())
-      .then((responseJson) => {
-        this.setState({ massOfMessages: responseJson.reverse() });
-      });
+  const checkNewMessage = () => {
+    if (text !== "") {
+      let mess = {
+        chat_message: text,
+        chat_user: user,
+        interlocutor: interlocutor,
+        chat_id: chatkey,
+        type: "NEWMESSAGETOUSER",
+      };
+      dispatch(sendMessage(mess));
+      input.current.clear();
+    }
   };
-}
+  useEffect(() => {
+    getMessages();
+    dispatch(checkMessages(updateToCheck));
+    console.log(massOfMessages.length);
+  }, []);
 
-const mapDispatchToProps = (dispatch) => ({
-  changetext: (text) => dispatch(changeText(text)),
-  sendMessage: (mass) => dispatch(sendMessage(mass)),
-  cleanMessages: (name) => dispatch(cleanMessages(name)),
-  checkMessages: (id) => dispatch(checkMessages(id)),
-});
+  const newPropsMessSet = (element) => {
+    let mass = [...massOfMessages];
+    mass.unshift({ message: element.message, sender: element.sender });
+    setmassOfMessages(mass);
+    dispatch(cleanMessages(element.sender));
+    dispatch(checkMessages(updateToCheck));
+  };
+  useEffect(() => {
+    if (message.length) {
+      message.forEach((element) => {
+        if (element.sender === interlocutor) {
+          newPropsMessSet(element);
+        } else if (element.sender === user) {
+          newPropsMessSet(element);
+        }
+      });
+    }
+  }, [message]);
 
-const mapStateToProps = (store) => ({
-  connection: store.connection,
-  message: store.message,
-  text: store.text,
-});
+  return (
+    <View style={styles.containerUser}>
+      <View style={styles.chatIntercoluter}>
+        <Text>{interlocutor}</Text>
+      </View>
 
-export default connect(mapStateToProps, mapDispatchToProps)(MyChats);
+      <FlatList
+        style={styles.chatScrollView}
+        data={massOfMessages}
+        renderItem={({ item }) => (
+          <View style={{ width: 360, transform: [{ scale: -1 }] }}>
+            <Text style={choseAlign(item.sender)}>
+              {item.sender + " : " + item.message}
+            </Text>
+          </View>
+        )}
+        keyExtractor={() => {
+          i++;
+          let num = i.toString();
+          return num;
+        }}
+      />
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS == "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={keyboardVerticalOffset}
+      >
+        <View style={styles.chatvievinput}>
+          <TextInput
+            placeholder="write message"
+            style={styles.chatInput}
+            ref={input}
+            onChangeText={(data) => {
+              text = data;
+            }}
+          />
+          <TouchableOpacity style={styles.sendmess} onPress={checkNewMessage}>
+            <Text>send</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </View>
+  );
+};
+
+export default MyChats;

@@ -1,77 +1,27 @@
-import React, { Component } from "react";
-import {
-  TouchableOpacity,
-  View,
-  SafeAreaView,
-  FlatList,
-  Modal,
-  Alert,
-  Text,
-  Button,
-} from "react-native";
-import { connect } from "react-redux";
+import React, { Component, useEffect, useState } from "react";
+import { TouchableOpacity, View, FlatList, Text, Button } from "react-native";
+import { connect, useDispatch, useSelector } from "react-redux";
 import { styles } from "../style/style";
-import { ScrollView, TextInput } from "react-native-gesture-handler";
 import { src } from "../serversource";
-import { unchecked } from "../store/actionCreators/actionCreators";
-class ChatList extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      list: this.props.route.params.mass,
-      userid: this.props.route.params.userid,
-      chatkey: "",
-      interlocutor: "",
-      userName: this.props.route.params.username,
-      newMessage: "",
-      uncheck: [],
-    };
-  }
+import {
+  setChatkey,
+  setInterlocutor,
+} from "../store/actionCreators/actionCreators";
+import { useNavigation } from "@react-navigation/native";
 
-  render() {
-    const { message } = this.props;
-    return (
-      <View style={styles.containerUser}>
-        <Text>{this.state.userName}</Text>
-        <FlatList
-          data={this.state.list}
-          renderItem={({ item }) => {
-            return (
-              <View style={styles.chatlistCon}>
-                <Text>{item.interlocutor}</Text>
-                {this.checkMessages(message, item.interlocutor)}
-                <Button
-                  title="go chat"
-                  onPress={() => {
-                    this.setState({ newMessage: "" });
-                    this.createChat(this.state.userName, item.interlocutor);
-                  }}
-                />
-              </View>
-            );
-          }}
-          keyExtractor={(x) => x.id}
-        />
-      </View>
-    );
-  }
+const ChatList = (props) => {
+  const user = useSelector((store) => store.user);
 
-  checkMessages = (mass, name) => {
-    let count = 0;
-    let uncheckMass = [];
-    uncheckMass[name] = { count: count };
-    mass.forEach((el) => {
-      if (el.sender == name) {
-        uncheckMass[name].count++;
-      }
-    });
-    if (uncheckMass[name].count > 0) {
-      return <Text>You have {uncheckMass[name].count} messages</Text>;
-    } else return <Text>You have any messages</Text>;
-  };
+  const message = useSelector((store) => store.message);
 
-  createChat = (name, interlocutor) => {
-    const query = fetch(src + "/fetchserver/chat.php", {
+  const navigation = useNavigation();
+
+  const [list, setList] = useState([]);
+
+  const dispatch = useDispatch();
+
+  const createChat = async (name, interlocutor) => {
+    const query = await fetch(src + "/fetchserver/chat.php", {
       method: "POST",
       body: JSON.stringify({
         query: "GETCHAT",
@@ -81,29 +31,78 @@ class ChatList extends Component {
       headers: {
         "Content-Type": "application/json",
       },
-    })
-      .then((response) => response.json())
-      .then((responseJson) => {
-        // this.setState({userId:responseJson});
-        if (responseJson.answer == "true") {
-          this.props.navigation.navigate("MyChats", {
-            userid: this.state.userid,
-            chatkey: responseJson.chatkey,
-            interlocutor: responseJson.interlocutor,
-            userName: this.state.userName,
-          });
-        }
-      });
+    });
+    const responseJson = await query.json();
+    if (responseJson.answer == "true") {
+      dispatch(setInterlocutor(responseJson.interlocutor));
+      dispatch(setChatkey(responseJson.chatkey));
+      navigation.navigate("MyChats");
+    }
   };
-}
-const mapDispatchToProps = (dispatch) => ({
-  changetext: (text) => dispatch(changeText(text)),
-  sendMessage: (mass) => dispatch(sendMessage(mass)),
-});
 
-const mapStateToProps = (store) => ({
-  connection: store.connection,
-  message: store.message,
-});
+  const getChats = async (name) => {
+    const query = await fetch(src + "/fetchserver/chat.php", {
+      method: "POST",
+      body: JSON.stringify({
+        query: "USERCHATS",
+        name: name,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const responseJson = await query.json();
+    if (responseJson.length) setList(responseJson);
+  };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ChatList);
+  useEffect(() => {
+    getChats(user);
+  }, []);
+
+  useEffect(() => {
+    if (list.length !== 0) getChats(user);
+  }, [message]);
+
+  return (
+    <View style={styles.containerUser}>
+      {list.length ? (
+        <FlatList
+          data={list}
+          renderItem={({ item }) => {
+            return (
+              <View style={styles.chatlistCon}>
+                <Text>{item.interlocutor}</Text>
+                {checkMessages(message, item.interlocutor)}
+                <Button
+                  title="go chat"
+                  onPress={() => {
+                    createChat(user, item.interlocutor);
+                  }}
+                />
+              </View>
+            );
+          }}
+          keyExtractor={(x) => x.id}
+        />
+      ) : (
+        <Text>you have not any chats</Text>
+      )}
+    </View>
+  );
+};
+
+const checkMessages = (mass, name) => {
+  let count = 0;
+  let uncheckMass = [];
+  uncheckMass[name] = { count: count };
+  mass.forEach((el) => {
+    if (el.sender == name) {
+      uncheckMass[name].count++;
+    }
+  });
+  if (uncheckMass[name].count > 0) {
+    return <Text>You have {uncheckMass[name].count} messages</Text>;
+  } else return <Text>You have any messages</Text>;
+};
+
+export default ChatList;
